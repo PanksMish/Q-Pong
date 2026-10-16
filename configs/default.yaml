@@ -1,0 +1,192 @@
+# =============================================================================
+# Q-PONG default configuration (Table III of the paper).
+# System files (ieee30.yaml, ieee57.yaml, ieee118.yaml) override these keys.
+# Values marked "MODELING CHOICE" are not fixed by the paper text and were
+# chosen for this implementation; change them if your runs used other values.
+# =============================================================================
+
+experiment:
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  results_dir: results
+  n_jobs: 1                     # parallel days (joblib); 1 = sequential
+
+data:
+  root: data
+  year: 2018
+  interval_minutes: 15
+  intervals_per_day: 96
+  source: real                  # real | synthetic  (synthetic = smoke tests only)
+  pecanstreet_file: data/raw/pecanstreet/15minute_data_austin.csv
+  pecanstreet_n_homes: 25
+  nsrdb_file: data/raw/nsrdb/nsrdb_austin_2018.csv
+  ercot_dam_file: data/raw/ercot/DAMLZHBSPP_2018.xlsx
+  ercot_rtm_file: data/raw/ercot/RTMLZHBSPP_2018.xlsx
+  ercot_hubs: [HB_HOUSTON, HB_NORTH, HB_SOUTH, HB_WEST]
+  egrid_file: data/raw/egrid/egrid2023_data.xlsx
+  egrid_subregion: ERCT
+  egrid_co2_lb_per_mwh: null    # filled automatically from the eGRID file
+  processed_file: data/processed/profiles_2018.parquet
+  test_day_stride: 12           # every 12th day -> 30 test days
+  n_val_days: 30
+  penetrations: [0.2, 0.4, 0.6]
+  stress:
+    high_demand: 1.15
+    low_renewables: 0.70
+  forecast:
+    intraday: persistence       # x_hat(t) = x(t-1)   (MODELING CHOICE)
+    day_ahead: previous_day     # x_hat(t) = x(t-96)  (MODELING CHOICE)
+  min_netload_fraction: 0.2     # PV curtailed so that net load >= 20% of demand (MODELING CHOICE)
+  demand_normalization: median  # eq. (24): D_t = D0 L_t / median(L)   (alternative: peak)
+  peak_load_factor: 1.0         # used only with demand_normalization = peak
+  pv_buses_fraction: 0.3        # PV placed at the largest 30% of load buses (MODELING CHOICE)
+  load_power_factor: 0.95
+
+grid:
+  pmin_fraction: 0.30           # min stable generation as share of Pmax (MODELING CHOICE)
+  noload_cost_fraction: 0.10    # c_i = frac * b_i * Pmax_i (MODELING CHOICE)
+  startup_cost_hours: 1.0       # s_i = hours * (b_i * Pmax_i)  (MODELING CHOICE)
+  min_up_intervals: 4
+  min_down_intervals: 4
+  ramp_fraction_per_interval: 0.25
+  reserve_fraction: 0.10
+  target_loading: 0.75          # nominal loading of committed encoded units in QUBO
+  verification_tol_pu: 1.0e-4
+  thermal_ratings: case_or_derived   # case | case_or_derived
+  derived_rating_factor: 1.5         # unrated branches (MATPOWER 57/118): 1.5 x base-case OPF flow
+  derived_rating_floor_mva: 50.0
+  vm_slack: 1.0e-4
+
+objectives:
+  network_cost_per_mwh: 2.0     # $/MWh network charge in coalition values (MODELING CHOICE)
+  imbalance_price_factor: 1.2   # market cost multiplier on shortfall (MODELING CHOICE)
+
+stage1:
+  criteria: [cost, carbon, grid]
+  best: cost
+  worst: carbon
+  # baseline triangular fuzzy preferences (l, m, r)
+  best_to_others:
+    cost: [1, 1, 1]
+    carbon: [3, 4, 5]
+    grid: [1.5, 2, 2.5]
+  others_to_worst:
+    cost: [3, 4, 5]
+    carbon: [1, 1, 1]
+    grid: [1.5, 2, 2.5]
+  a_min: 1.0
+  a_max: 9.0
+  # context sensitivity gamma_ij . s_t  (rows: comparison, cols: [nu, rho, pi, df])
+  gamma_best_to_others:
+    cost: [0, 0, 0, 0]
+    carbon: [0.0, 0.5, 2.0, 0.0]
+    grid: [-1.5, -2.0, 1.0, -1.0]
+  gamma_others_to_worst:
+    cost: [0.0, 0.0, 2.0, 0.0]
+    carbon: [0, 0, 0, 0]
+    grid: [1.5, 2.0, 0.0, 1.0]
+  feedback_gain: [0.2, 0.2, 0.0, 0.1]   # diag of Gamma_e (eq. 21)
+  freq_nominal: 60.0
+  freq_response_per_hz: 1.0     # aggregate response (fraction of load per Hz) for the derived frequency
+  freq_dev_max: 0.5
+  vdev_max: 0.06
+
+stage2:
+  ansatz: EfficientSU2
+  reps: 3                       # L = 3 -> K = 8 N_enc parameters
+  entanglement: circular
+  optimizer: spsa
+  maxiter: 300
+  warm_start: true
+  warm_maxiter: 300             # warm-started runs stop on convergence (see spsa tol)
+  spsa_tol: 1.0e-4
+  spsa_patience: 30
+  spsa:
+    calibrate: true             # learning-rate calibration (overrides `a`)
+    target_step: 0.6283         # 2*pi/10
+    warm_step_factor: 0.2       # smaller first step when warm-started
+    calibration_samples: 25
+    a: 0.2
+    c: 0.1
+    alpha: 0.602
+    gamma: 0.101
+    A: 30
+  shots: 8192
+  max_candidates: 100
+  mode: noiseless               # noiseless | noise | hardware
+  simulator: numpy              # numpy | aer (CPU/GPU, cuQuantum)
+  numpy_max_qubits: 14          # above this the Aer simulator is used automatically
+  aer_device: CPU               # set GPU to use cuQuantum
+  penalties:
+    lambda_P: 10.0
+    lambda_G: 10.0
+    lambda_T: 1.0
+    lambda_F: 1.0
+  prescreen_weights:
+    omega_P: 1.0
+    omega_G: 1.0
+    omega_D: 0.1
+  noise:
+    p1: 1.0e-3
+    p2: 1.0e-2
+    T1_us: 50.0
+    T2_us: 70.0
+    t_1q_ns: 50.0
+    t_2q_ns: 300.0
+    t_meas_ns: 1000.0
+    train_under_noise: true
+
+stage3:
+  hidden: [128, 128, 128, 128]
+  activation: tanh
+  lr: 1.0e-3
+  max_epochs: 2000
+  batch_size: 256
+  lr_patience: 100
+  early_stop_patience: 200
+  lambdas: {AC: 1.0, V: 1.0, S: 1.0, G: 1.0, D: 1.0}
+  n_train_samples: 20000        # OPF samples generated from training days
+  tau_phys: 0.05                # admission threshold on V_phys (eq. 16)
+  eta: {P: 1.0, Q: 1.0, V: 1.0, S: 1.0, G: 1.0}
+  max_repair_attempts: 1
+  compute_reference: true       # re-solve admitted state with AC-OPF for E_PINN
+
+stage4:
+  shapley_exact_max_n: 10
+  n_permutations: 1000
+  alpha_levels: [0.2, 0.4, 0.6, 0.8, 1.0]
+  alpha_default: 0.6
+  alpha_adjust_step: 0.2
+  tau_width: 0.15
+  spread_weights: {res: 1.0, load: 1.0, price: 1.0}
+  spread_window: 96             # intervals used to estimate forecast-error std
+  pinn_batch: 1024
+  eval_coverage: true           # ex-post realized allocations for Fig. 16 (not timed)
+  max_governance_rejects: 3
+
+ablation:
+  fixed_weights: false
+  quantum_solver: vqe           # vqe | sa | exact
+  pinn_physics: true
+  verification: true
+  fuzzy_settlement: true
+  hitl: true
+  sa: {sweeps: 2000, restarts: 10}
+
+baselines:
+  gminlp:
+    backend: auto               # auto | gurobi | enumerate
+    time_limit_s: 600
+    mip_gap: 1.0e-4
+    enumerate_top_k: 64
+  most:
+    horizon_intervals: 16
+    n_scenarios: 3
+  qduc:
+    admm_rho: 1.0
+    admm_iters: 20
+    qaoa_p: 2
+    qaoa_maxiter: 100
+    group_size: 7               # distributed subsystems (qubits per QAOA instance)
+  pinn_opf:
+    hidden: [128, 128, 128, 128]
+  day_ahead_milp_time_limit_s: 300

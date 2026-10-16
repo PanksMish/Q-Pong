@@ -1,0 +1,18 @@
+system:
+  name: ieee118
+  case: case118
+  role: scalability
+  # 54 MATPOWER generators -> 19 dispatchable thermal zones (N_enc = 19).
+  # Each zone is anchored on one of the 19 units with Pmax > 100 MW (the 18
+  # large units plus the slack unit at bus 69). The remaining 35 units of the
+  # case (Pmax = 100 MW) are held by the classical layer as synchronous
+  # condensers (P = 0) at fixed voltage set-points (fixed_units_mode:
+  # condenser; set `dispatchable` to keep them as always-on generators). Each
+  # is assigned to its nearest zone (graph distance) for reporting only.
+  # MODELING CHOICE: replace `zone_anchor_buses` with the zone map you used
+  # if it differs.
+  zone_anchor_buses: [10, 12, 25, 26, 31, 46, 49, 54, 59, 61, 65, 66, 69, 80, 87, 89, 100, 103, 111]
+  encoded_buses: auto
+  fixed_buses: auto
+  fixed_units_mode: condenser
+  n_participants: 19

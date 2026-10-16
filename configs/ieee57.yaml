@@ -1,0 +1,7 @@
+system:
+  name: ieee57
+  case: case57
+  role: medium-scale validation and ablations
+  encoded_buses: [1, 2, 3, 6, 8, 9, 12]   # N_enc = 7
+  fixed_buses: []
+  n_participants: 7

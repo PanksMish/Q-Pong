@@ -1,0 +1,8 @@
+system:
+  name: ieee30
+  case: case30
+  role: component validation
+  # Encoded units: one commitment bit per controllable unit (N_enc = 6)
+  encoded_buses: [1, 2, 13, 22, 23, 27]
+  fixed_buses: []
+  n_participants: 6
