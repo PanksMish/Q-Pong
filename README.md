@@ -5,7 +5,7 @@ framework for adaptive unit commitment and risk-aware smart-grid operation.
 
 Reference implementation of
 
-> P. Mishra, S. Okuhara, T. Saha, S. Parab and Y. Singh, *"Q-PONG: A Hybrid Quantum-Physics-Informed
+> *"Q-PONG: A Hybrid Quantum-Physics-Informed
 > Framework for Adaptive Unit Commitment and Risk-Aware Smart Grid Operation"* (submitted).
 
 ```
