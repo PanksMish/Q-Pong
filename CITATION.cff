@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the Q-PONG paper."
+title: "Q-PONG: A Hybrid Quantum-Physics-Informed Framework for Adaptive Unit Commitment and Risk-Aware Smart Grid Operation"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/PanksMish/Q-PONG"
+authors:
+  - family-names: Mishra
+    given-names: Pankaj
+    affiliation: "K. J. Somaiya School of Engineering, Somaiya Vidyavihar University"
+  - family-names: Okuhara
+    given-names: Shun
+    affiliation: "Mie University"
+  - family-names: Saha
+    given-names: Tanisha
+    affiliation: "K. J. Somaiya School of Engineering, Somaiya Vidyavihar University"
+  - family-names: Parab
+    given-names: Sanskar
+    affiliation: "K. J. Somaiya School of Engineering, Somaiya Vidyavihar University"
+  - family-names: Singh
+    given-names: Yashbeer
+    affiliation: "Futwork"

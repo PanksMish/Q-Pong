@@ -1,0 +1,16 @@
+# Versions used during development (Python 3.13). Newer versions should work.
+numpy>=1.26
+scipy>=1.11
+pandas>=2.0
+openpyxl>=3.1
+pyyaml>=6.0
+networkx>=3.0
+matplotlib>=3.7
+PYPOWER>=5.1.16
+torch>=2.1
+qiskit>=1.0            # developed with 2.5.2
+qiskit-aer>=0.14       # developed with 0.17.2
+qiskit-ibm-runtime>=0.40   # developed with 0.50.0 (hardware runs only)
+pvlib>=0.10            # NSRDB download only
+pytest>=7
+# optional: gurobipy>=11 (G-MINLP Gurobi back-end), qiskit-aer-gpu (cuQuantum), numba (speed)

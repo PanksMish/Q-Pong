@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# data: raw sources are licensed / large; the processed profiles may be shared deliberately
+data/raw/
+data/processed/*
+!data/processed/.gitkeep
+
+# generated results (commit selected tables/figures deliberately with git add -f)
+results/*
+!results/.gitkeep
+
+# hardware dry runs are simulations, never results
+hardware/dryrun_*/
+
+# credentials
+qiskit-ibm.json
